@@ -1,7 +1,17 @@
 
 # Student Expense Tracker
 
-A simple Python CLI application to help students track their daily expenses efficiently. This project is perfect for learning Python classes, file handling, and basic data management.
+This is a Python application to track student expenses.
+
+## Database
+
+- Uses **SQLite** to store expenses.
+- The database file (`expense.db`) is **not included** in the repo.
+- To create the database, table and migrate from .json file which i was using before. run:
+
+```bash
+python create_table.py
+python migration.py
 
 ---
 
@@ -57,11 +67,16 @@ python expense_tracker.py
 
 ```
 student-expense-tracker/
-├── expense_tracker.py    # Main program
-├── README.md             # Project description
-├── .gitignore            # Files/folders to ignore in Git
-```
-
+├── data/                     
+│   ├── expense.db            
+│   ├── queries.sql           
+│   └── old_expenses.json     
+│
+├── expense_tracker.py        
+├── create_table.py           
+├── migration.py              
+├── README.md                 
+└── .gitignore                
 ---
 
 ## Usage Example

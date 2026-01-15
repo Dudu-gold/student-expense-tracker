@@ -1,3 +1,15 @@
-expense.json
+# Ignore SQLite database files
+*.db
+
+# Ignore JSON data files (optional)
+*.json
+
+# Ignore Python cache files
 __pycache__/
 *.pyc
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

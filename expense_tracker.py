@@ -1,5 +1,6 @@
-import json
+import sqlite3
 from datetime import datetime
+
 
 class Expense:
     def __init__(self, amount, category, description):
@@ -8,65 +9,68 @@ class Expense:
         self.description = description
         self.datetime = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
 
-    def to_dict(self):
-        return {
-            "amount": self.amount,
-            "category": self.category,
-            "description" : self.description,
-            "datetime" : self.datetime
-        }
-
 class Expense_tracker:
-    def __init__(self,  filename="expense.json"):
-        self.filename = filename
-        self.expenses = self.load_expenses()
-    
-    def load_expenses(self):
-        try:
-            with open(self.filename, "r") as file:
-                return json.load(file)
-        except FileNotFoundError:
-            return []
-    
-    def save_expenses(self):
-        with open(self.filename, "w") as file:
-            json.dump(self.expenses, file, indent=4)
+    def __init__(self,  db_path="data/expense.db"):
+        self.db_path = db_path
+
+    def connect(self):
+        return sqlite3.connect(self.db_path)
+        
     
     def add_expenses(self, amount, category, description):
-        try:
-            amount = float(amount)
-            category = category.title()
+        conn = self.connect()
+        cursor = conn.cursor()
+        
+        ALLOWED_CATEGORIES = ["Food", "Transport", "Drink", "Data", "Others"]
+        
+        category = category.strip().title()
+        if category not in ALLOWED_CATEGORIES:
+            print(f"Invalid category. Allowed categories are: {', '.join(ALLOWED_CATEGORIES)}")
+            return
 
-            if category not in ["Food", "Transport", "Drink", "Data", "Others"]:
-                print("Invalid category. Please choose from Food, Transport, Drink, Data, Others.")
-                return
-            
-            expense = Expense(amount, category, description)
-            self.expenses.append(expense.to_dict())
-            self.save_expenses()
-            print("Expense added successfully.")
-        except ValueError:
-            print("Invalid input. Please enter a valid amount.")
+        cursor.execute('''
+            INSERT INTO expenses (amount, category, description,datetime)
+            VALUES (?,?,?, datetime('now'))
+         ''', (amount, category, description))
+
+        conn.commit()
+        conn.close()
+        print("Expense added successfully.")
+
+        
+
+    
 
 
     def view_expenses(self):
-        if not self.expenses:
+        conn = self.connect()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT id, amount, category, description, datetime FROM expenses")
+        rows = cursor.fetchall()
+
+        if not rows:
             print("No expenses recorded.")
             return
+        
+        for row in rows:
+            print(f"{row[0]}. {row[2]} - #{row[1]} ({row[3]}) on {row[4]}")
 
-        for i, expense in enumerate(self.expenses, start=1):
-            print(
-                f"{i}. {expense['category']} - ₦{expense['amount']}"
-                f"({expense['description']}) on {expense.get('datetime', 'Unknown date')}"
-            )
+        conn.close()
 
     def total_expense(self):
+        conn = self.connect()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT SUM(amount) FROM expenses")
+        total = cursor.fetchone()[0]
+
+        print(f"Total Expenses: #{total if total else 0}")
+
+        conn.close()
         
     
-        total = sum(expense.get("amount", 0) for expense in self.expenses)
-
-        print(f"Total Expenses : ₦{total}")
-
+       
 
 def main():
     tracker = Expense_tracker()
